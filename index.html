@@ -10,18 +10,20 @@
             const covid19_Timeline_TH_Url = "https://covid19.th-stat.com/json/covid19v2/getTimeline.json";
             var covidData;
             var jsonData;
+            var jsonDataByCase;
             var dataC;
             var dataTable;
-            var defaultdate = "03/01/2021"; // MM/DD/YYY
+            var defaultdate = "05/02/2021"; // MM/DD/YYY
             var startDate;
             var endDate;
-            var predict = false;
-            var polynomail1 = new Polynomail.New();
-            var polynomail2 = new Polynomail.New();
-            var polynomail3 = new Polynomail.New();
-            var polynomail4 = new Polynomail.New();
+            var predict = false;          
             
-            window.onload = Http.SendRequest('GET', covid19_Timeline_TH_Url, OnDataLoaded, OnRequestError);
+            window.onload = LoadData();
+
+            function LoadData()
+            {
+                Http.SendRequest('GET', covid19_Timeline_TH_Url, OnDataLoaded, OnRequestError);
+            }
 
             function OnRequestError(response)
             {
@@ -38,7 +40,7 @@
                 date = covidData[covidData.length-1].Date.split("/");// MM//DD/YYYY
                 endDate = date[2]+"-"+date[0]+"-"+date[1]; // YYYY-MM-DD
                 
-                Elements.Id("api_update_status").innerHTML = "ข้อมูลจาก API ของกรมควบคุมโรค อัพเดท ล่าสุด วันที่ "+jsonData.UpdateDate;
+                Elements.Id("api_update_status").innerHTML = "ข้อมูลจาก API ของกรมควบคุมโรค อัพเดท ล่าสุด วันที่ " + jsonData.UpdateDate;
                 console.log(covidData);
                 Elements.Id("start").value = startDate;
                 Elements.Id("end").value = endDate;
@@ -52,6 +54,12 @@
                 date = Elements.Id("end").value.split('-'); // YYYY-MM-DD
                 var end = date[1] + "/" + date[2] + "/" + date[0]; // MM//DD/YYYY
                 GenerateDataFrom(start,end);
+                Predict();
+                RenderChart();
+            }
+
+            function RenderChart()
+            {
                 RenderChartDetail(jsonData.Data);
                 RenderChartNewInfected(covidData);
                 RenderChartInfected(covidData)
@@ -61,9 +69,8 @@
 
             function Predict() 
             {
-                predict = true;
-                polynomail1.Equation.push(Polynomail.Variable(1,0));
-                alert("เป็นการทำนายเพื่อดูแนวโน้มเท่านั้น อยู่ในระหว่างการพัฒนา");
+
+                
             }
 
             function  GenerateDataFrom(start,end) 
@@ -89,10 +96,10 @@
                                         NewRecovered:dataC[i].NewRecovered,
                                         NewHospitalized:dataC[i].NewHospitalized,
                                         NewDeaths:dataC[i].NewDeaths,
-                                        Confirmed:dataC[i].Confirmed-dataC[startIndex].Confirmed + dataC[i].NewConfirmed,
-                                        Recovered:dataC[i].Recovered-dataC[startIndex].Recovered + dataC[i].NewRecovered,
-                                        Hospitalized:dataC[i].Hospitalized-dataC[startIndex].Hospitalized + dataC[i].NewHospitalized,
-                                        Deaths:dataC[i].Deaths-dataC[startIndex].Deaths + dataC[i].NewDeaths
+                                        Confirmed:dataC[i].Confirmed-dataC[startIndex].Confirmed + dataC[startIndex-1].Confirmed,
+                                        Recovered:dataC[i].Recovered-dataC[startIndex].Recovered + dataC[startIndex-1].Recovered,
+                                        Hospitalized:dataC[i].Hospitalized-dataC[startIndex].Hospitalized + dataC[startIndex-1].Hospitalized,
+                                        Deaths:dataC[i].Deaths-dataC[startIndex].Deaths + dataC[startIndex-1].Deaths
                                         });
                         if(stop)
                         {
@@ -279,7 +286,7 @@
         <input type="date" id="end" name="trip-end" value="2021-04-01" min="2019-01-01" max="2039-12-31" onchange="OnDateChange()" style="font-size:20px;">
         <button onclick="Predict()" style="font-size:20px;">ทำนาย</button>
         <br><br>
-        <table  style="background:black; width: 1800px"> 
+        <table  style="width: 1800px"> 
             <tr>
                 <td style="background:black; width: 900px">
                     <div id="chart1" style="height: 370px; width: 900px;"></div>
